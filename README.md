@@ -37,6 +37,30 @@ Clasfy is a comprehensive web-based application designed to streamline classroom
 
 ### Installation
 
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/masfy/clasfy.git
+    cd clasfy
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Configure Environment Variables:
+    Create a `.env.local` file in the root directory and add your Google Apps Script Web App URL:
+    ```env
+    NEXT_PUBLIC_API_URL=your_google_apps_script_url
+    ```
+
+4.  Run the development server:
+    ```bash
+    npm run dev
+    ```
+
+5.  Open [http://localhost:3000](http://localhost:3000) with your browser.
+
 ## 📂 Project Structure
 
 - \`src/app/(auth)\`: Authentication pages (Login).

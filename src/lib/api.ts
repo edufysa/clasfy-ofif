@@ -1,5 +1,5 @@
 // Default fallback URL (Development / Demo)
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzuJFeAeXwHbukVMsFPcUQ7JNZTwwMofD96nIfo-BKrjxj_BL2xSdwdLelianXCbIAzXA/exec";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxuTpdyL3pOVkIAq_2zC7BI7zeMws63O2k3DfKuyy6NcBfcAK7YwlI-N6a_ujCKN6U/exec";
 
 // Helper to get the current API URL
 export const getApiUrl = () => {

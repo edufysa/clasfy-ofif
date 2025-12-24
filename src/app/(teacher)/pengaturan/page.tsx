@@ -3,64 +3,56 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { StorageManager } from "@/lib/storage-manager"
-import { Shield, Smartphone, Trash2, User, Database, Download, Upload } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Bell, Shield, Smartphone, Trash2, User, Database, Download, Upload } from "lucide-react"
 import AkunPage from "./akun/page"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function PengaturanPage() {
     const { toast } = useToast()
+    const [notifications, setNotifications] = useState({
+        email: true,
+        push: true,
+        updates: false
+    })
 
-    const handleResetData = async () => {
-        if (confirm("Apakah Anda yakin ingin mereset TOTAL aplikasi ini? \n\nSemua data lokal (cache, pengaturan, sesi login) akan dihapus. Aplikasi akan dimuat ulang seperti baru.")) {
-            try {
-                // 1. Clear IndexedDB (Offline Data)
-                await StorageManager.clearAllData()
-                // 2. Clear LocalStorage (Settings, Session)
-                localStorage.clear()
-
-                toast({ title: "Reset Berhasil", description: "Aplikasi akan dimuat ulang..." })
-                setTimeout(() => window.location.reload(), 1000)
-            } catch (e) {
-                console.error("Reset failed", e)
-                // Fallback
-                localStorage.clear()
-                window.location.reload()
-            }
+    const handleResetData = () => {
+        if (confirm("Apakah Anda yakin ingin mereset semua data lokal? Tindakan ini tidak dapat dibatalkan.")) {
+            localStorage.clear()
+            window.location.reload()
         }
     }
 
     const handleBackupData = () => {
-        // Backup LocalStorage (Settings & Session)
         const data = { ...localStorage }
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `clasfy-settings-backup-${new Date().toISOString().split('T')[0]}.json`
+        a.download = `clasfy-backup-${new Date().toISOString().split('T')[0]}.json`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
-        toast({ title: "Backup Pengaturan Berhasil", description: "File JSON telah diunduh." })
+        toast({ title: "Backup berhasil diunduh", description: "Simpan file ini di tempat yang aman." })
     }
 
     const handleRestoreData = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (confirm("Pulihkan pengaturan dari file backup? Pengaturan saat ini akan ditimpa.")) {
+        if (confirm("Apakah Anda yakin ingin memulihkan data? Data saat ini akan ditimpa.")) {
             const reader = new FileReader()
             reader.onload = (event) => {
                 try {
                     const data = JSON.parse(event.target?.result as string)
-                    // Only restore keys that don't conflict with critical system state if needed, 
-                    // but for now full restore is requested.
+                    localStorage.clear()
                     Object.keys(data).forEach(key => {
                         localStorage.setItem(key, data[key])
                     })
-                    toast({ title: "Restore Berhasil", description: "Halaman akan dimuat ulang..." })
+                    toast({ title: "Restore berhasil", description: "Halaman akan dimuat ulang..." })
                     setTimeout(() => window.location.reload(), 1500)
                 } catch (error) {
                     toast({ title: "Gagal memulihkan data", description: "File backup tidak valid.", variant: "destructive" })
@@ -85,6 +77,9 @@ export default function PengaturanPage() {
                     <TabsTrigger value="aplikasi" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-500 shadow-sm">
                         <Smartphone className="h-4 w-4 mr-2" /> Aplikasi
                     </TabsTrigger>
+                    <TabsTrigger value="notifikasi" className="data-[state=active]:bg-white data-[state=active]:text-slate-900 text-slate-500 shadow-sm">
+                        <Bell className="h-4 w-4 mr-2" /> Notifikasi
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="akun" className="mt-6">
@@ -103,17 +98,17 @@ export default function PengaturanPage() {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                 <span className="text-slate-500">Versi Aplikasi</span>
-                                <span className="font-mono text-sm">v2.1.1</span>
+                                <span className="font-mono text-sm">v1.2.0 (Beta)</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-slate-100">
                                 <span className="text-slate-500">Build Number</span>
-                                <span className="font-mono text-sm">20241227</span>
+                                <span className="font-mono text-sm">20241215</span>
                             </div>
                             <div className="flex justify-between items-center py-2">
                                 <span className="text-slate-500">Status Server</span>
                                 <span className="text-emerald-500 flex items-center gap-1 text-sm">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    Online (Global)
+                                    Online
                                 </span>
                             </div>
                         </CardContent>
@@ -123,15 +118,15 @@ export default function PengaturanPage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-purple-500">
                                 <Database className="h-5 w-5" />
-                                Backup & Restore (Lokal)
+                                Backup & Restore
                             </CardTitle>
-                            <CardDescription className="text-slate-500">Cadangkan pengaturan lokal browser ini.</CardDescription>
+                            <CardDescription className="text-slate-500">Cadangkan dan pulihkan data aplikasi.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg bg-slate-50">
                                 <div>
-                                    <h4 className="font-bold text-slate-900">Backup Pengaturan</h4>
-                                    <p className="text-xs text-slate-500 mt-1">Unduh preferensi lokal sebagai file JSON.</p>
+                                    <h4 className="font-bold text-slate-900">Backup Data</h4>
+                                    <p className="text-xs text-slate-500 mt-1">Unduh semua data aplikasi sebagai file JSON.</p>
                                 </div>
                                 <Button variant="outline" size="sm" onClick={handleBackupData} className="border-purple-500/50 text-purple-600 hover:bg-purple-50">
                                     <Download className="h-4 w-4 mr-2" /> Download Backup
@@ -139,8 +134,8 @@ export default function PengaturanPage() {
                             </div>
                             <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg bg-slate-50">
                                 <div>
-                                    <h4 className="font-bold text-slate-900">Restore Pengaturan</h4>
-                                    <p className="text-xs text-slate-500 mt-1">Pulihkan preferensi dari file JSON.</p>
+                                    <h4 className="font-bold text-slate-900">Restore Data</h4>
+                                    <p className="text-xs text-slate-500 mt-1">Pulihkan data dari file backup JSON.</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -169,12 +164,65 @@ export default function PengaturanPage() {
                         <CardContent>
                             <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
                                 <div>
-                                    <h4 className="font-bold text-red-600">Reset Aplikasi Total</h4>
-                                    <p className="text-xs text-red-500/70 mt-1">Hapus semua cache, data offline, dan pengaturan di perangkat ini.</p>
+                                    <h4 className="font-bold text-red-600">Reset Data Lokal</h4>
+                                    <p className="text-xs text-red-500/70 mt-1">Hapus semua data yang tersimpan di browser ini.</p>
                                 </div>
                                 <Button variant="destructive" size="sm" onClick={handleResetData}>
-                                    <Trash2 className="h-4 w-4 mr-2" /> Reset Total
+                                    <Trash2 className="h-4 w-4 mr-2" /> Reset Data
                                 </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="notifikasi" className="mt-6">
+                    <Card className="bg-white border-slate-200 text-slate-900 shadow-md">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Bell className="h-5 w-5 text-yellow-500" />
+                                Preferensi Notifikasi
+                            </CardTitle>
+                            <CardDescription className="text-slate-500">Atur bagaimana Anda ingin menerima pemberitahuan.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Notifikasi Email</Label>
+                                    <p className="text-sm text-slate-500">Terima laporan mingguan via email.</p>
+                                </div>
+                                <Switch
+                                    checked={notifications.email}
+                                    onCheckedChange={c => {
+                                        setNotifications({ ...notifications, email: c })
+                                        toast({ title: "Pengaturan disimpan" })
+                                    }}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Push Notification</Label>
+                                    <p className="text-sm text-slate-500">Pemberitahuan langsung di browser.</p>
+                                </div>
+                                <Switch
+                                    checked={notifications.push}
+                                    onCheckedChange={c => {
+                                        setNotifications({ ...notifications, push: c })
+                                        toast({ title: "Pengaturan disimpan" })
+                                    }}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Info Pembaruan</Label>
+                                    <p className="text-sm text-slate-500">Dapatkan info fitur baru Clasfy.</p>
+                                </div>
+                                <Switch
+                                    checked={notifications.updates}
+                                    onCheckedChange={c => {
+                                        setNotifications({ ...notifications, updates: c })
+                                        toast({ title: "Pengaturan disimpan" })
+                                    }}
+                                />
                             </div>
                         </CardContent>
                     </Card>
